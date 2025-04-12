@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitHub Folder Contents</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    ul { list-style-type: none; padding: 0; }
+    li { padding: 0.3rem 0; }
+    a { text-decoration: none; color: blue; }
+  </style>
+</head>
+<body>
+  <h1>Contents of GitHub Folder</h1>
+  <ul id="file-list">Loading...</ul>
+
+  <script>
+    const owner = "Benno111"; // replace with actual owner
+    const repo = "AppStore"; // replace with actual repo
+    const path = "Apps"; // folder path in repo
+    const branch = "main"; // or master, or a specific branch
+
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById('file-list');
+        list.innerHTML = '';
+        data.forEach(item => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = item.html_url;
+          link.textContent = item.name;
+          link.target = "_blank";
+          li.appendChild(link);
+          list.appendChild(li);
+        });
+      })
+      .catch(err => {
+        document.getElementById('file-list').innerText = "Failed to load contents.";
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
