@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Megacraft Bug Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAARBJREFUOE+NkjFOw0AQRd8WiBopnascACltrhDRp8oB0qbIIShocwBX9IgrpAwSB0AU6SKlSYOQMPq7Hjxe1la2mdm/M3/+fDtQVw2XH/j4Jp7pTcot3t8m3GqE67Q1ge2kiYAK37/SY37X28CQPoEaPUlHlxTZZFMKdAT5ZK/IFBQJ5IGmWkMevQqft96EaOLqCHXFVXE7gcfTX30AmuUcnvdQr2G1A7vncbOAp1fwMSznpK/QnocZvLyBRcHKD5/lXUK9pvENJYJSq9UNEpQUCdMwU6W8RzAk08iO5261fwpUVN0NfbOEjxKMGeUV5IbHFfLd/N32NcybLKznQcmkMTNFFv8DJfnJ3fZKrFY1vw+8sOsd4yJ+AAAAAElFTkSuQmCC">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #eee;
+      margin: 0;
+      padding: 2em;
+      padding-top: 6em;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h1 {
+      color: #00ffcc;
+      text-align: center;
+    }
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
+
+    #authArea {
+      text-align: center;
+      margin-bottom: 2em;
+    }
+
+    input {
+      padding: 0.6em;
+      margin: 0.3em;
+      background: #222;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+    }
+
+    button {
+      background: #00cc88;
+      color: white;
+      border: none;
+      padding: 0.5em 1.5em;
+      margin-top: 0.5em;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #00aa77;
+    }
+
+    .bug {
+      background: #222;
+      padding: 1em;
+      margin-top: 1em;
+      border-radius: 10px;
+    }
+
+    .bug pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    #logoutBtn {
+      display: none;
+    }
+
+    #userInfo {
+      font-size: 0.9em;
+      color: #aaa;
+      margin-top: 0.5em;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href="bugadmin.html">🐞 Bug Tracker Admin</a>
+    <a href="patchnotes-dev.html">🛠️ Patch Notes Admin</a>
+    <a href="index.html">🆕Download</a>    
+  </nav>
+
+  <h1>Bug Report Admin</h1>
+
+  <div id="authArea">
+    <input id="emailInput" type="email" placeholder="Email" />
+    <input id="passwordInput" type="password" placeholder="Password" />
+    <br />
+    <button onclick="login()">Login</button>
+    <button id="logoutBtn" onclick="logout()">Logout</button>
+    <div id="userInfo"></div>
+  </div>
+
+  <div id="bugList">
+    <p>Login to view bug reports...</p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyChjjDaGQFun-FRepLe1epBPaW8XXIkV0Y",
+      authDomain: "somethings-1e13b.firebaseapp.com",
+      databaseURL: "https://somethings-1e13b-default-rtdb.firebaseio.com",
+      projectId: "somethings-1e13b",
+      storageBucket: "somethings-1e13b.appspot.com",
+      messagingSenderId: "575513186640",
+      appId: "1:575513186640:web:f050f93b268a5e306d1c55"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const bugList = document.getElementById("bugList");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userInfo = document.getElementById("userInfo");
+
+    function login() {
+      const email = document.getElementById("emailInput").value;
+      const password = document.getElementById("passwordInput").value;
+      auth.signInWithEmailAndPassword(email, password).catch(err =>
+        alert("Login failed: " + err.message)
+      );
+    }
+
+    function signup() {
+      const email = document.getElementById("emailInput").value;
+      const password = document.getElementById("passwordInput").value;
+      auth.createUserWithEmailAndPassword(email, password).catch(err =>
+        alert("Signup failed: " + err.message)
+      );
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user && user.email) {
+        logoutBtn.style.display = "inline-block";
+        userInfo.textContent = "Logged in as: " + user.email;
+        loadBugReports();
+      } else {
+        logoutBtn.style.display = "none";
+        userInfo.textContent = "";
+        bugList.innerHTML = "<p>Login to view bug reports...</p>";
+      }
+    });
+
+    function loadBugReports() {
+  db.ref("bugReports").once("value").then(snapshot => {
+    const data = snapshot.val();
+    if (!data) {
+      bugList.innerHTML = "<p>No bug reports found.</p>";
+      return;
+    }
+
+    bugList.innerHTML = "";
+    const entries = Object.entries(data).reverse();
+    entries.forEach(([id, bug]) => {
+      const time = bug.timestamp
+        ? new Date(bug.timestamp).toLocaleString()
+        : "(no time)";
+      const email = bug.email || "Anonymous";
+      const desc = bug.description || "(no message)";
+
+      const div = document.createElement("div");
+      div.className = "bug";
+
+      const bugHtml = `
+        <strong>ID:</strong> ${id}<br/>
+        <strong>Time:</strong> ${time}<br/>
+        <strong>Email:</strong> ${escapeHtml(email)}<br/>
+        <pre id="desc-${id}">${escapeHtml(desc)}</pre>
+        <button onclick="editBug('${id}', \`${escapeHtml(desc)}\`)">✏️ Edit</button>
+        <div id="edit-area-${id}"></div>
+      `;
+
+      div.innerHTML = bugHtml;
+      bugList.appendChild(div);
+    });
+  }).catch(err => {
+    console.error(err);
+    bugList.innerHTML = "<p>❌ Error loading bug reports.</p>";
+  });
+}
+
+function editBug(id, oldText) {
+  const area = document.getElementById(`edit-area-${id}`);
+  area.innerHTML = `
+    <textarea id="edit-text-${id}" style="width:100%;margin-top:0.5em;">${oldText.replace(/`/g, "\\`")}</textarea>
+    <button onclick="saveBug('${id}')">💾 Save</button>
+  `;
+}
+
+function saveBug(id) {
+  const newText = document.getElementById(`edit-text-${id}`).value;
+  db.ref("bugReports/" + id).update({ description: newText })
+    .then(() => {
+      alert("Bug report updated.");
+      loadBugReports(); // refresh
+    })
+    .catch(err => {
+      alert("Failed to update bug: " + err.message);
+    });
+}
+
+
+    function escapeHtml(text) {
+      return (text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
