@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAARBJREFUOE+NkjFOw0AQRd8WiBopnascACltrhDRp8oB0qbIIShocwBX9IgrpAwSB0AU6SKlSYOQMPq7Hjxe1la2mdm/M3/+fDtQVw2XH/j4Jp7pTcot3t8m3GqE67Q1ge2kiYAK37/SY37X28CQPoEaPUlHlxTZZFMKdAT5ZK/IFBQJ5IGmWkMevQqft96EaOLqCHXFVXE7gcfTX30AmuUcnvdQr2G1A7vncbOAp1fwMSznpK/QnocZvLyBRcHKD5/lXUK9pvENJYJSq9UNEpQUCdMwU6W8RzAk08iO5261fwpUVN0NfbOEjxKMGeUV5IbHFfLd/N32NcybLKznQcmkMTNFFv8DJfnJ3fZKrFY1vw+8sOsd4yJ+AAAAAElFTkSuQmCC">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Megacraft Bug Tracker</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #eee;
+      margin: 0;
+      padding: 2em;
+      padding-top: 6em;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h1 {
+      color: #00ffcc;
+      margin-bottom: 0.5em;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.7em;
+      border-radius: 5px;
+      border: none;
+      background: #222;
+      color: #fff;
+      margin-top: 0.3em;
+      font-family: sans-serif;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 1.5em;
+      padding: 0.8em 2em;
+      background-color: #00cc88;
+      border: none;
+      color: #fff;
+      font-size: 1em;
+      border-radius: 10px;
+      cursor: pointer;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #00aa77;
+    }
+    #bugList {
+      margin-top: 3em;
+      background: #222;
+      padding: 1em;
+      border-radius: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 0.95em;
+      line-height: 1.3em;
+    }
+    #authStatus {
+      margin-top: 1em;
+      font-size: 0.9em;
+      color: #888;
+      text-align: center;
+    }
+
+    /* Topbar styles */
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href="index.html">🏠 Download</a>
+    <a href="bugtracker.html">🐞 Bug Tracker</a>
+    <a href="patchnotes.html">📄 Patch Notes</a>
+  </nav>
+
+  <h1>Megacraft Bug Tracker</h1>
+  <p style="text-align:center;">Help us improve Megacraft by reporting bugs below.</p>
+
+  <form id="bugForm" onsubmit="event.preventDefault(); submitBug();">
+    <label for="bugDescription">Bug Description *</label>
+    <textarea id="bugDescription" rows="5" placeholder="Describe what happened..." required></textarea>
+
+    <label for="userEmail">Your Email (optional)</label>
+    <input type="email" id="userEmail" placeholder="you@example.com" />
+
+    <button type="submit">Submit Bug</button>
+  </form>
+
+  <div id="authStatus">Checking authentication...</div>
+
+  <div id="bugList">
+    <!-- Bug reports will appear here -->
+  </div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyChjjDaGQFun-FRepLe1epBPaW8XXIkV0Y",
+      authDomain: "somethings-1e13b.firebaseapp.com",
+      databaseURL: "https://somethings-1e13b-default-rtdb.firebaseio.com",
+      projectId: "somethings-1e13b",
+      storageBucket: "somethings-1e13b.firebasestorage.app",
+      messagingSenderId: "575513186640",
+      appId: "1:575513186640:web:f050f93b268a5e306d1c55"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    const authStatusEl = document.getElementById("authStatus");
+
+    // Sign in anonymously on page load
+    auth.signInAnonymously()
+      .then(() => {
+        authStatusEl.textContent = "Signed in anonymously. You can submit bugs.";
+      })
+      .catch(error => {
+        authStatusEl.textContent = "Auth error: " + error.message;
+      });
+
+    // Submit bug report
+    function submitBug() {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You must be signed in to submit a bug.");
+        return;
+      }
+
+      const description = document.getElementById("bugDescription").value.trim();
+      const emailInput = document.getElementById("userEmail").value.trim();
+
+      if (!description) {
+        alert("Please describe the bug.");
+        return;
+      }
+
+      const email = emailInput || "Anonymous";
+
+      const newBugRef = database.ref('bugReports').push();
+      newBugRef.set({
+        description,
+        email,
+        timestamp: Date.now(),
+        uid: user.uid
+      }).then(() => {
+        alert("Bug report submitted. Thank you!");
+        document.getElementById("bugForm").reset();
+      }).catch(error => {
+        alert("Error submitting bug: " + error.message);
+      });
+    }
+
+    // Render bug list
+    function renderBugList(bugs) {
+      const listEl = document.getElementById("bugList");
+      listEl.innerHTML = "";
+
+      if (!bugs) {
+        listEl.innerHTML = "<p>No bug reports yet.</p>";
+        return;
+      }
+
+      const bugArray = Object.values(bugs).sort((a, b) => b.timestamp - a.timestamp);
+
+      bugArray.forEach(bug => {
+        const date = new Date(bug.timestamp).toLocaleString();
+        const item = document.createElement("div");
+        item.style.borderBottom = "1px solid #333";
+        item.style.padding = "0.5em 0";
+        item.innerHTML = `
+          <p><strong>${escapeHtml(bug.email)}</strong> reported at <em>${escapeHtml(date)}</em></p>
+          <p>${escapeHtml(bug.description).replace(/\n/g, "<br>")}</p>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    // Listen for bug report updates
+    const bugReportsRef = database.ref('bugReports');
+    bugReportsRef.on('value', snapshot => {
+      renderBugList(snapshot.val());
+    });
+
+    // Simple HTML escape to avoid injection
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+
+</body>
+</html>

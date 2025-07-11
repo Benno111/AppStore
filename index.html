@@ -2,30 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAARBJREFUOE+NkjFOw0AQRd8WiBopnascACltrhDRp8oB0qbIIShocwBX9IgrpAwSB0AU6SKlSYOQMPq7Hjxe1la2mdm/M3/+fDtQVw2XH/j4Jp7pTcot3t8m3GqE67Q1ge2kiYAK37/SY37X28CQPoEaPUlHlxTZZFMKdAT5ZK/IFBQJ5IGmWkMevQqft96EaOLqCHXFVXE7gcfTX30AmuUcnvdQr2G1A7vncbOAp1fwMSznpK/QnocZvLyBRcHKD5/lXUK9pvENJYJSq9UNEpQUCdMwU6W8RzAk08iO5261fwpUVN0NfbOEjxKMGeUV5IbHFfLd/N32NcybLKznQcmkMTNFFv8DJfnJ3fZKrFY1vw+8sOsd4yJ+AAAAAElFTkSuQmCC">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Megacraft Download</title>
   <style>
     body {
       font-family: sans-serif;
       background-color: #111;
       color: #eee;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       margin: 0;
+      padding: 2em;
+      padding-top: 6em; /* space for topbar */
       text-align: center;
-      padding: 1rem;
     }
     h1 {
       color: #00ffcc;
-      font-size: 2.5em;
       margin-bottom: 0.5em;
     }
     p {
-      margin-bottom: 1.2em;
       max-width: 500px;
+      margin: 0 auto 1.2em;
       color: #aaa;
     }
     a.download-btn {
@@ -36,30 +32,93 @@
       font-size: 1.2em;
       border-radius: 10px;
       transition: background 0.3s;
+      display: inline-block;
+      margin-bottom: 1em;
     }
     a.download-btn:hover {
       background-color: #00aa77;
+    }
+    .open-link {
+      display: block;
+      margin-top: 1em;
+      font-size: 1.1em;
+      color: #00ccff;
+      text-decoration: underline;
+    }
+    .open-link:hover {
+      color: #00aaff;
     }
     .note {
       font-size: 0.9em;
       color: #888;
       margin-top: 2em;
     }
+    .hash-box {
+      margin-top: 1em;
+      padding: 1em;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 8px;
+      font-family: monospace;
+      word-break: break-all;
+      max-width: 90vw;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Topbar styles */
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
   </style>
 </head>
 <body>
 
+  <nav class="topbar">
+    <a href="index.html">🏠 Download</a>
+    <a href="bugtracker.html">🐞 Bug Tracker</a>
+    <a href="patchnotes.html">📄 Patch Notes</a>
+  </nav>
+
   <h1>Megacraft Pre-Release</h1>
   <p>Thank you for testing our new game! This is a nightly pre-release build. Please report any bugs or feedback.</p>
   <p><strong>How to run:</strong><br>
-  Rename the downloaded file to end with <code>.html</code>, then open it in your browser.</p>
+    Rename the downloaded file to end with <code>.html</code>, then open it in your browser.
+  </p>
 
-  <a class="download-btn" href="https://benno111.github.io/AppStore/Apps/Megacraft/Megaraft%20Nightly.osapp" download>
+  <a class="download-btn"
+     href="https://benno111.github.io/AppStore/Apps/Megacraft/Megaraft%20Nightly.osapp"
+     download="Megacraft_v1.3.html">
     Download v1.3 Nightly Pre-Release
   </a>
+
+  <a class="open-link" href="Apps/Megacraft/Megaraft Nightly.osapp">Open Megacraft</a>
+
+  <div class="hash-box">
+    SHA-256:<br>
+    <code>2b3e7c9fcdab81c4f4b7b8e2a9e5a3c2179c84d3a92e8e0a7b86ef3f2f913b4a</code>
+  </div>
 
   <div class="note">Build date: July 2025 · Platform: HTML5</div>
 
 </body>
 </html>
-
