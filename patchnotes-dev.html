@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Megacraft Patch Notes</title>
-  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAARBJREFUOE+NkjFOw0AQRd8WiBopnascACltrhDRp8oB0qbIIShocwBX9IgrpAwSB0AU6SKlSYOQMPq7Hjxe1la2mdm/M3/+fDtQVw2XH/j4Jp7pTcot3t8m3GqE67Q1ge2kiYAK37/SY37X28CQPoEaPUlHlxTZZFMKdAT5ZK/IFBQJ5IGmWkMevQqft96EaOLqCHXFVXE7gcfTX30AmuUcnvdQr2G1A7vncbOAp1fwMSznpK/QnocZvLyBRcHKD5/lXUK9pvENJYJSq9UNEpQUCdMwU6W8RzAk08iO5261fwpUVN0NfbOEjxKMGeUV5IbHFfLd/N32NcybLKznQcmkMTNFFv8DJfnJ3fZKrFY1vw+8sOsd4yJ+AAAAAElFTkSuQmCC">
+  <link rel="icon" href="data:image/png;base64,..." />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -20,43 +20,73 @@
       margin-left: auto;
       margin-right: auto;
     }
+
     h1 {
       color: #00ffcc;
       text-align: center;
     }
+
     .version {
       background: #222;
       padding: 1em;
       border-radius: 10px;
       margin-top: 2em;
     }
+
     .version h2 {
       color: #00cc88;
     }
+
     ul {
       padding-left: 1.5em;
     }
+
     nav.topbar {
-      width: 100%;
-      background-color: #1a1a1a;
-      padding: 0.8em 1.5em;
+      background: #1a1a1a;
+      padding: 0.8em;
       display: flex;
       justify-content: center;
       gap: 2em;
       position: fixed;
       top: 0;
       left: 0;
+      width: 100%;
       z-index: 10;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     }
+
     nav.topbar a {
       color: #eee;
       text-decoration: none;
       font-weight: bold;
     }
+
     nav.topbar a:hover {
       color: #00ffcc;
     }
+
+    #authForm input {
+      padding: 0.5em;
+      margin: 0.3em;
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+    }
+
+    #authForm button {
+      background: #00cc88;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1.5em;
+      margin-top: 0.5em;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #authForm button:hover {
+      background: #00aa77;
+    }
+
     #adminForm {
       margin-top: 3em;
       display: none;
@@ -64,6 +94,7 @@
       padding: 1em;
       border-radius: 10px;
     }
+
     #adminForm textarea, #adminForm input {
       width: 100%;
       margin: 0.5em 0;
@@ -73,15 +104,25 @@
       padding: 0.7em;
       border-radius: 5px;
     }
-    #adminForm button {
-      padding: 0.6em 1.5em;
-      background: #00cc88;
+
+    #logoutBtn {
+      display: none;
+      background: #444;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      color: #ccc;
+      padding: 0.4em 1em;
+      margin-top: 1em;
+      border-radius: 6px;
     }
-    #adminForm button:hover {
-      background: #00aa77;
+
+    #logoutBtn:hover {
+      background: #666;
+    }
+
+    #userInfo {
+      margin-top: 0.5em;
+      color: #aaa;
+      font-size: 0.9em;
     }
   </style>
 </head>
@@ -95,17 +136,26 @@
 
   <h1>Megacraft Patch Notes</h1>
 
+  <div id="authForm">
+    <input id="emailInput" type="email" placeholder="Email" />
+    <input id="passwordInput" type="password" placeholder="Password" />
+    <br />
+    <button onclick="login()">🔐 Login</button>
+    <br />
+    <button id="logoutBtn" onclick="logout()">🚪 Logout</button>
+    <div id="userInfo"></div>
+  </div>
+
   <div id="patchNotesContainer">Loading patch notes...</div>
 
   <div id="adminForm">
-    <h2>Add Patch Note (Admin Only)</h2>
+    <h2>Add Patch Note</h2>
     <input id="versionInput" placeholder="Version (e.g. v1.3 Nightly – July 2025)" />
     <textarea id="changesInput" rows="6" placeholder="Enter changes, one per line"></textarea>
     <button onclick="submitPatchNote()">Submit Patch</button>
   </div>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyChjjDaGQFun-FRepLe1epBPaW8XXIkV0Y",
       authDomain: "somethings-1e13b.firebaseapp.com",
@@ -116,16 +166,17 @@
       appId: "1:575513186640:web:f050f93b268a5e306d1c55"
     };
 
-    // Init Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
 
     const patchNotesContainer = document.getElementById("patchNotesContainer");
     const adminForm = document.getElementById("adminForm");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userInfo = document.getElementById("userInfo");
 
-    // Load patch notes from DB
-    firebase.database().ref("changelog").on("value", (snapshot) => {
+    // Load patch notes
+    db.ref("changelog").on("value", (snapshot) => {
       const data = snapshot.val();
       patchNotesContainer.innerHTML = "";
       if (!data) {
@@ -133,14 +184,13 @@
         return;
       }
 
-      // Convert to array and reverse by timestamp
       const entries = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
       entries.forEach(entry => {
         const div = document.createElement("div");
         div.className = "version";
 
-        const title = document.createElement("h2");
-        title.textContent = entry.version;
+        const h2 = document.createElement("h2");
+        h2.textContent = entry.version;
 
         const ul = document.createElement("ul");
         entry.changes.forEach(c => {
@@ -149,49 +199,53 @@
           ul.appendChild(li);
         });
 
-        div.appendChild(title);
+        div.appendChild(h2);
         div.appendChild(ul);
         patchNotesContainer.appendChild(div);
       });
     });
 
-    // Auth login (Anonymous or Email/Password)
-    auth.signInAnonymously()
-      .then(() => {
-        // Show form only if not anonymous
-        auth.onAuthStateChanged((user) => {
-          if (user && !user.isAnonymous) {
-            adminForm.style.display = "block";
-          }
-        });
-      }).catch(err => {
-        console.error("Auth error:", err.message);
-      });
+    // Email login
+    function login() {
+      const email = document.getElementById("emailInput").value;
+      const password = document.getElementById("passwordInput").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(e => alert("Login failed: " + e.message));
+    }
+    // Logout
+    function logout() {
+      auth.signOut();
+    }
 
-    // Submit patch note (admin only)
+    // Auth state change
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        adminForm.style.display = "block";
+        logoutBtn.style.display = "inline-block";
+        userInfo.textContent = "Logged in as: " + (user.email || user.uid);
+      } else {
+        adminForm.style.display = "none";
+        logoutBtn.style.display = "none";
+        userInfo.textContent = "";
+      }
+    });
+
+    // Submit new patch note
     function submitPatchNote() {
       const version = document.getElementById("versionInput").value.trim();
       const changesRaw = document.getElementById("changesInput").value.trim();
-
-      if (!version || !changesRaw) {
-        alert("Please fill in all fields.");
-        return;
-      }
+      if (!version || !changesRaw) return alert("Fill out both fields.");
 
       const changes = changesRaw.split("\n").map(c => c.trim()).filter(Boolean);
-      const newRef = db.ref("changelog").push();
-
-      newRef.set({
+      db.ref("changelog").push({
         version,
         changes,
         timestamp: Date.now()
       }).then(() => {
-        alert("Patch note added.");
+        alert("Patch note added!");
         document.getElementById("versionInput").value = "";
         document.getElementById("changesInput").value = "";
-      }).catch(err => {
-        alert("Error: " + err.message);
-      });
+      }).catch(e => alert("Error: " + e.message));
     }
   </script>
 </body>
