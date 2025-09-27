@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAARBJREFUOE+NkjFOw0AQRd8WiBopnascACltrhDRp8oB0qbIIShocwBX9IgrpAwSB0AU6SKlSYOQMPq7Hjxe1la2mdm/M3/+fDtQVw2XH/j4Jp7pTcot3t8m3GqE67Q1ge2kiYAK37/SY37X28CQPoEaPUlHlxTZZFMKdAT5ZK/IFBQJ5IGmWkMevQqft96EaOLqCHXFVXE7gcfTX30AmuUcnvdQr2G1A7vncbOAp1fwMSznpK/QnocZvLyBRcHKD5/lXUK9pvENJYJSq9UNEpQUCdMwU6W8RzAk08iO5261fwpUVN0NfbOEjxKMGeUV5IbHFfLd/N32NcybLKznQcmkMTNFFv8DJfnJ3fZKrFY1vw+8sOsd4yJ+AAAAAElFTkSuQmCC">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Megacraft - Terms of Service</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #eee;
+      margin: 0;
+      padding: 2em;
+      padding-top: 6em; /* space for topbar */
+      text-align: left;
+    }
+    h1 {
+      color: #00ffcc;
+      text-align: center;
+      margin-bottom: 1em;
+    }
+    #tos-box {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1.5em;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #ccc;
+      line-height: 1.5em;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .copy-email {
+      color: #00ccff;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .copy-email:hover {
+      color: #00aaff;
+    }
+    a.tos-link {
+      color: #00ffcc;
+      text-decoration: underline;
+      word-break: break-word;
+    }
+    a.tos-link:hover {
+      color: #00ddaa;
+    }
+
+    /* Topbar */
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href="index.html">🏠 Download</a>
+    <a href="bugtracker.html">🐞 Bug Tracker</a>
+    <a href="patchnotes.html">📄 Patch Notes</a>
+    <a href="tos.html">📜 Terms of Service</a>
+  </nav>
+
+  <h1>Terms of Service</h1>
+
+  <div id="tos-box">Loading terms...</div>
+
+  <script>
+    fetch("tos.txt")
+      .then(response => {
+        if (!response.ok) throw new Error("Failed to load TOS");
+        return response.text();
+      })
+      .then(text => {
+        // Make emails copyable
+        const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+        let html = text.replace(emailRegex, '<span class="copy-email" data-email="$1">$1</span>');
+
+        // Make links clickable
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        html = html.replace(urlRegex, '<a href="$1" target="_blank" class="tos-link">$1</a>');
+
+        document.getElementById("tos-box").innerHTML = html;
+
+        // Email click-to-copy handler
+        document.querySelectorAll(".copy-email").forEach(el => {
+          el.addEventListener("click", () => {
+            const email = el.dataset.email;
+            navigator.clipboard.writeText(email).then(() => {
+              el.textContent = email + " (copied!)";
+              setTimeout(() => el.textContent = email, 1500);
+            });
+          });
+        });
+      })
+      .catch(err => {
+        document.getElementById("tos-box").textContent = "Error loading Terms of Service.";
+        console.error(err);
+      });
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Megacraft Patch Notes</title>
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAARBJREFUOE+NkjFOw0AQRd8WiBopnascACltrhDRp8oB0qbIIShocwBX9IgrpAwSB0AU6SKlSYOQMPq7Hjxe1la2mdm/M3/+fDtQVw2XH/j4Jp7pTcot3t8m3GqE67Q1ge2kiYAK37/SY37X28CQPoEaPUlHlxTZZFMKdAT5ZK/IFBQJ5IGmWkMevQqft96EaOLqCHXFVXE7gcfTX30AmuUcnvdQr2G1A7vncbOAp1fwMSznpK/QnocZvLyBRcHKD5/lXUK9pvENJYJSq9UNEpQUCdMwU6W8RzAk08iO5261fwpUVN0NfbOEjxKMGeUV5IbHFfLd/N32NcybLKznQcmkMTNFFv8DJfnJ3fZKrFY1vw+8sOsd4yJ+AAAAAElFTkSuQmCC">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #eee;
+      margin: 0;
+      padding: 2em;
+      padding-top: 6em;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h1 {
+      color: #00ffcc;
+      text-align: center;
+    }
+    .version {
+      background: #222;
+      padding: 1em;
+      border-radius: 10px;
+      margin-top: 2em;
+    }
+    .version h2 {
+      color: #00cc88;
+    }
+    ul {
+      padding-left: 1.5em;
+    }
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
+    #adminForm {
+      margin-top: 3em;
+      display: none;
+      background: #1a1a1a;
+      padding: 1em;
+      border-radius: 10px;
+    }
+    #adminForm textarea, #adminForm input {
+      width: 100%;
+      margin: 0.5em 0;
+      background: #222;
+      color: #fff;
+      border: none;
+      padding: 0.7em;
+      border-radius: 5px;
+    }
+    #adminForm button {
+      padding: 0.6em 1.5em;
+      background: #00cc88;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #adminForm button:hover {
+      background: #00aa77;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href="index.html">🏠 Download</a>
+    <a href="bugtracker.html">🐞 Bug Tracker</a>
+    <a href="patchnotes.html">📄 Patch Notes</a>
+    <a href="tos.html">📜 Terms of Service</a>
+  </nav>
+
+  <h1>Megacraft Patch Notes</h1>
+
+  <div id="patchNotesContainer">Loading patch notes...</div>
+
+  <div id="adminForm">
+    <h2>Add Patch Note (Admin Only)</h2>
+    <input id="versionInput" placeholder="Version (e.g. v1.3 Nightly – July 2025)" />
+    <textarea id="changesInput" rows="6" placeholder="Enter changes, one per line"></textarea>
+    <button onclick="submitPatchNote()">Submit Patch</button>
+  </div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyChjjDaGQFun-FRepLe1epBPaW8XXIkV0Y",
+      authDomain: "somethings-1e13b.firebaseapp.com",
+      databaseURL: "https://somethings-1e13b-default-rtdb.firebaseio.com",
+      projectId: "somethings-1e13b",
+      storageBucket: "somethings-1e13b.appspot.com",
+      messagingSenderId: "575513186640",
+      appId: "1:575513186640:web:f050f93b268a5e306d1c55"
+    };
+
+    // Init Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    const patchNotesContainer = document.getElementById("patchNotesContainer");
+    const adminForm = document.getElementById("adminForm");
+
+    // Load patch notes from DB
+    firebase.database().ref("changelog").on("value", (snapshot) => {
+      const data = snapshot.val();
+      patchNotesContainer.innerHTML = "";
+      if (!data) {
+        patchNotesContainer.innerHTML = "<p>No patch notes found.</p>";
+        return;
+      }
+
+      // Convert to array and reverse by timestamp
+      const entries = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+      entries.forEach(entry => {
+        const div = document.createElement("div");
+        div.className = "version";
+
+        const title = document.createElement("h2");
+        title.textContent = entry.version;
+
+        const ul = document.createElement("ul");
+        entry.changes.forEach(c => {
+          const li = document.createElement("li");
+          li.textContent = c;
+          ul.appendChild(li);
+        });
+
+        div.appendChild(title);
+        div.appendChild(ul);
+        patchNotesContainer.appendChild(div);
+      });
+    });
+
+    // Auth login (Anonymous or Email/Password)
+    auth.signInAnonymously()
+      .then(() => {
+        // Show form only if not anonymous
+        auth.onAuthStateChanged((user) => {
+          if (user && !user.isAnonymous) {
+            adminForm.style.display = "block";
+          }
+        });
+      }).catch(err => {
+        console.error("Auth error:", err.message);
+      });
+
+    // Submit patch note (admin only)
+    function submitPatchNote() {
+      const version = document.getElementById("versionInput").value.trim();
+      const changesRaw = document.getElementById("changesInput").value.trim();
+
+      if (!version || !changesRaw) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const changes = changesRaw.split("\n").map(c => c.trim()).filter(Boolean);
+      const newRef = db.ref("changelog").push();
+
+      newRef.set({
+        version,
+        changes,
+        timestamp: Date.now()
+      }).then(() => {
+        alert("Patch note added.");
+        document.getElementById("versionInput").value = "";
+        document.getElementById("changesInput").value = "";
+      }).catch(err => {
+        alert("Error: " + err.message);
+      });
+    }
+  </script>
+</body>
+</html>

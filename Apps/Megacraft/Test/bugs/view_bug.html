@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bug Report - Megacraft</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #eee;
+      margin: 0;
+      padding: 2em;
+      padding-top: 6em;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h1 {
+      color: #00ffcc;
+      margin-bottom: 0.5em;
+      text-align: center;
+    }
+    .bug-container {
+      background: #1a1a1a;
+      padding: 1.5em;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .bug-status {
+      display: inline-block;
+      margin-bottom: 1em;
+      padding: 0.4em 1em;
+      border-radius: 8px;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+    .status-open { background-color: #ff4444; color: #fff; }
+    .status-fixed { background-color: #44cc44; color: #fff; }
+    .status-wip { background-color: #ffaa00; color: #fff; }
+    .status-do-it-later { background-color: #5555ff; color: #fff; }
+    .status-cant-fix-now { background-color: #aa00aa; color: #fff; }
+    .status-cant-fix { background-color: #777; color: #fff; }
+    .field {
+      margin-bottom: 1em;
+    }
+    .field strong {
+      display: block;
+      margin-bottom: 0.3em;
+      color: #00ccff;
+    }
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <a href="index.html">🏠 Download</a>
+    <a href="submit_bug.html">🐞 Report Bug</a>
+    <a href="bugtracker.html">📄 Bug Tracker</a>
+    <a href="patchnotes.html">📄 Patch Notes</a>
+    <a href="tos.html">📜 Terms of Service</a>
+  </nav>
+
+  <h1>Bug Report</h1>
+
+  <div id="bugContainer" class="bug-container">
+    <p>Loading bug details...</p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyChjjDaGQFun-FRepLe1epBPaW8XXIkV0Y",
+      authDomain: "somethings-1e13b.firebaseapp.com",
+      databaseURL: "https://somethings-1e13b-default-rtdb.firebaseio.com",
+      projectId: "somethings-1e13b",
+      storageBucket: "somethings-1e13b.firebasestorage.app",
+      messagingSenderId: "575513186640",
+      appId: "1:575513186640:web:f050f93b268a5e306d1c55"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Read bug ID from query string (?id=xxxx)
+    const urlParams = new URLSearchParams(window.location.search);
+    const bugId = urlParams.get("id");
+
+    const container = document.getElementById("bugContainer");
+
+    if (!bugId) {
+      container.innerHTML = "<p style='color:red;'>No bug ID specified.</p>";
+    } else {
+      database.ref("bugReports/" + bugId).once("value")
+        .then(snapshot => {
+          const bug = snapshot.val();
+          if (!bug) {
+            container.innerHTML = "<p style='color:red;'>Bug not found.</p>";
+            return;
+          }
+
+          container.innerHTML = `
+            <div class="bug-status status-${(bug.status || "open").toLowerCase().replace(/\s+/g, "-")}">
+              ${bug.status || "Open"}
+            </div>
+            <div class="field">
+              <strong>Title</strong>
+              <div>${bug.title || "(No Title)"}</div>
+            </div>
+            <div class="field">
+              <strong>Description</strong>
+              <div>${bug.description || "(No Description)"}</div>
+            </div>
+            <div class="field">
+              <strong>Reported By</strong>
+              <div>${bug.email || "Anonymous"}</div>
+            </div>
+            <div class="field">
+              <strong>Reported On</strong>
+              <div>${new Date(bug.timestamp).toLocaleString()}</div>
+            </div>
+          `;
+        })
+        .catch(error => {
+          container.innerHTML = "<p style='color:red;'>Error loading bug: " + error.message + "</p>";
+        });
+    }
+  </script>
+
+</body>
+</html>

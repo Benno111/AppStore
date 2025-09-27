@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Megacraft</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      margin: 0;
+      padding-top: 6em;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .card {
+      background: #1a1a1a;
+      padding: 2em;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    h1 {
+      color: #00ffcc;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+      text-align: left;
+    }
+    input {
+      width: 100%;
+      padding: 0.7em;
+      border: none;
+      border-radius: 6px;
+      margin-top: 0.3em;
+      background: #222;
+      color: #fff;
+    }
+    button {
+      width: 100%;
+      padding: 0.8em;
+      margin-top: 1.5em;
+      border: none;
+      border-radius: 6px;
+      background: #00cc88;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #00aa66;
+    }
+    p {
+      margin-top: 1em;
+    }
+    a {
+      color: #00ffcc;
+      text-decoration: none;
+    }
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
+    /* 🔽 Dropdown styles */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      margin-left: auto;
+    }
+    .dropdown-toggle {
+      cursor: pointer;
+      font-weight: bold;
+      color: #eee;
+      background: none;
+      border: none;
+      font-size: 1em;
+    }
+    .dropdown-toggle:hover {
+      color: #00ffcc;
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: #222;
+      border-radius: 6px;
+      min-width: 160px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
+    .dropdown-menu a,
+    .dropdown-menu button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      text-align: left;
+      background: none;
+      border: none;
+      color: #eee;
+      font-size: 0.95em;
+      cursor: pointer;
+    }
+    .dropdown-menu a:hover,
+    .dropdown-menu button:hover {
+      background: #333;
+      color: #00ffcc;
+    }
+    .dropdown.open .dropdown-menu {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <!-- 🔹 Navbar with dropdown -->
+  <nav class="topbar">
+    <a href="index.html">🏠 Download</a>
+    <a href="submit_bug.html">🐞 Report Bug</a>
+    <a href="bugtracker.html">📄 Bug Tracker</a>
+    <a href="patchnotes.html">📄 Patch Notes</a>
+    <a href="tos.html">📜 Terms of Service</a>
+    <div id="accountInfo" class="dropdown"></div>
+  </nav>
+
+  <!-- 🔹 Login/Register Card -->
+  <div class="card" id="authCard">
+    <h1>Login</h1>
+    <form id="loginForm">
+      <label>Email</label>
+      <input type="email" id="email" required />
+      <label>Password</label>
+      <input type="password" id="password" required />
+      <button type="submit">Login</button>
+    </form>
+    <p><a href="#" id="toggleRegister">Don’t have an account? Register here</a></p>
+  </div>
+
+  <!-- 🔹 Logged-in Message -->
+  <div class="card" id="loggedInCard" style="display:none;">
+    <h1>✅ Already Logged In</h1>
+    <p id="userEmail"></p>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyChjjDaGQFun-FRepLe1epBPaW8XXIkV0Y",
+      authDomain: "somethings-1e13b.firebaseapp.com",
+      projectId: "somethings-1e13b",
+      storageBucket: "somethings-1e13b.firebasestorage.app",
+      messagingSenderId: "575513186640",
+      appId: "1:575513186640:web:f050f93b268a5e306d1c55"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+
+    const authCard = document.getElementById("authCard");
+    const loggedInCard = document.getElementById("loggedInCard");
+    const userEmail = document.getElementById("userEmail");
+    const accountInfo = document.getElementById("accountInfo");
+
+    let isRegister = false;
+
+    document.getElementById("toggleRegister").addEventListener("click", (e) => {
+      e.preventDefault();
+      isRegister = !isRegister;
+      document.querySelector("#authCard h1").textContent = isRegister ? "Register" : "Login";
+      document.querySelector("#authCard button").textContent = isRegister ? "Register" : "Login";
+      e.target.textContent = isRegister
+        ? "Already have an account? Login here"
+        : "Don’t have an account? Register here";
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      if (isRegister) {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(() => {
+            alert("Account created! You are now logged in.");
+            window.location.href = "index.html";
+          })
+          .catch(err => alert(err.message));
+      } else {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+            alert("Logged in successfully!");
+            window.location.href = "index.html";
+          })
+          .catch(err => alert(err.message));
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        alert("Logged out.");
+        location.reload();
+      });
+    }
+
+    // 🔑 Update UI based on login state
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        accountInfo.innerHTML = `
+          <button class="dropdown-toggle" onclick="this.parentElement.classList.toggle('open')">
+            👤 ${user.email}
+          </button>
+          <div class="dropdown-menu">
+            <a href="../../account/index.html">My Account</a>
+            <button onclick="logout()">Logout</button>
+          </div>
+        `;
+
+        authCard.style.display = "none";
+        loggedInCard.style.display = "block";
+        userEmail.textContent = "You are logged in as: " + user.email;
+      } else {
+        accountInfo.innerHTML = `
+          <a href="login.html" style="color:#00ffcc; text-decoration:none;">🔑 Login</a>
+        `;
+        authCard.style.display = "block";
+        loggedInCard.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
+

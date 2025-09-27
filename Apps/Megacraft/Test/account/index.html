@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Account - Megacraft</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      margin: 0;
+      padding-top: 6em;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .card {
+      background: #1a1a1a;
+      padding: 2em;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    h1 {
+      color: #00ffcc;
+      margin-bottom: 1em;
+    }
+    p {
+      margin: 0.8em 0;
+    }
+    button {
+      padding: 0.7em 1.2em;
+      border: none;
+      border-radius: 6px;
+      background: #00cc88;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 1em;
+    }
+    button:hover {
+      background: #00aa66;
+    }
+    nav.topbar {
+      width: 100%;
+      background-color: #1a1a1a;
+      padding: 0.8em 1.5em;
+      display: flex;
+      justify-content: center;
+      gap: 2em;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+    nav.topbar a {
+      color: #eee;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+    nav.topbar a:hover {
+      color: #00ffcc;
+    }
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      margin-left: auto;
+    }
+    .dropdown-toggle {
+      cursor: pointer;
+      font-weight: bold;
+      color: #eee;
+      background: none;
+      border: none;
+      font-size: 1em;
+    }
+    .dropdown-toggle:hover {
+      color: #00ffcc;
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: #222;
+      border-radius: 6px;
+      min-width: 160px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
+    .dropdown-menu a,
+    .dropdown-menu button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      text-align: left;
+      background: none;
+      border: none;
+      color: #eee;
+      font-size: 0.95em;
+      cursor: pointer;
+    }
+    .dropdown-menu a:hover,
+    .dropdown-menu button:hover {
+      background: #333;
+      color: #00ffcc;
+    }
+    .dropdown.open .dropdown-menu {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <!-- 🔹 Navbar -->
+  <nav class="topbar">
+    <a href="index.html">🏠 Download</a>
+    <a href="submit_bug.html">🐞 Report Bug</a>
+    <a href="bugtracker.html">📄 Bug Tracker</a>
+    <a href="patchnotes.html">📄 Patch Notes</a>
+    <a href="tos.html">📜 Terms of Service</a>
+    <div id="accountInfo" class="dropdown"></div>
+  </nav>
+
+  <!-- 🔹 Account Card -->
+  <div class="card" id="accountCard" style="display:none;">
+    <h1>My Account</h1>
+    <p><strong>Email:</strong> <span id="userEmail"></span></p>
+    <p><strong>Account Created:</strong> <span id="createdAt"></span></p>
+    <p><strong>Last Login:</strong> <span id="lastLogin"></span></p>
+
+    <button onclick="sendPasswordReset()">Reset Password</button>
+    <button onclick="logout()" style="background:#ff4444; margin-left:10px;">Logout</button>
+  </div>
+
+  <div class="card" id="notLoggedInCard" style="display:none;">
+    <h1>⚠️ Not Logged In</h1>
+    <p>Please <a href="login.html">log in</a> to access your account.</p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyChjjDaGQFun-FRepLe1epBPaW8XXIkV0Y",
+      authDomain: "somethings-1e13b.firebaseapp.com",
+      projectId: "somethings-1e13b",
+      storageBucket: "somethings-1e13b.firebasestorage.app",
+      messagingSenderId: "575513186640",
+      appId: "1:575513186640:web:f050f93b268a5e306d1c55"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+
+    const accountInfo = document.getElementById("accountInfo");
+    const accountCard = document.getElementById("accountCard");
+    const notLoggedInCard = document.getElementById("notLoggedInCard");
+
+    function logout() {
+      auth.signOut().then(() => {
+        alert("Logged out.");
+        window.location.href = "index.html";
+      });
+    }
+
+    function sendPasswordReset() {
+      const user = auth.currentUser;
+      if (user && user.email) {
+        auth.sendPasswordResetEmail(user.email)
+          .then(() => alert("Password reset email sent to " + user.email))
+          .catch(err => alert(err.message));
+      }
+    }
+
+    // 🔑 Auth state handling
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        const created = new Date(user.metadata.creationTime).toLocaleString();
+        const lastLogin = new Date(user.metadata.lastSignInTime).toLocaleString();
+
+        document.getElementById("userEmail").textContent = user.email;
+        document.getElementById("createdAt").textContent = created;
+        document.getElementById("lastLogin").textContent = lastLogin;
+
+        accountCard.style.display = "block";
+        notLoggedInCard.style.display = "none";
+
+        accountInfo.innerHTML = `
+          <button class="dropdown-toggle" onclick="this.parentElement.classList.toggle('open')">
+            👤 ${user.email}
+          </button>
+          <div class="dropdown-menu">
+            <a href="account.html">My Account</a>
+            <button onclick="logout()">Logout</button>
+          </div>
+        `;
+      } else {
+        accountCard.style.display = "none";
+        notLoggedInCard.style.display = "block";
+
+        accountInfo.innerHTML = `
+          <a href="login.html" style="color:#00ffcc; text-decoration:none;">🔑 Login</a>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
+
