@@ -1,133 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Setup</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js" type="module"></script>
+<meta charset="UTF-8">
+<title>Download & Play</title>
+<style>
+  body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 60px;
+  }
 
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f2f5; }
-        .auth-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); width: 350px; }
-        h2 { text-align: center; color: #1a73e8; margin-bottom: 20px; }
-        input[type="email"], input[type="password"] { width: 100%; padding: 12px; margin: 8px 0 15px; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #1a73e8; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 16px; }
-        button:hover { background-color: #1558b3; }
-        #message { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    </style>
+  .btn {
+    display: block;
+    width: 260px;
+    margin: 15px;
+    padding: 15px;
+    text-align: center;
+    background: #1e293b;
+    border: 2px solid #38bdf8;
+    border-radius: 10px;
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    transition: 0.2s;
+  }
+
+  .btn:hover {
+    background: #38bdf8;
+    color: #0f172a;
+  }
+</style>
 </head>
 <body>
 
-    <div class="auth-container">
-        <h2>Create Account</h2>
+<h1>Select an Option</h1>
 
-        <form id="signup-form">
-            <label for="email">Email</label>
-            <input type="email" id="email" required placeholder="Enter your email">
+<a class="btn" href="/Signup">Sign Up</a>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" required placeholder="Enter password (min 6 chars)">
-            
-            <button type="submit">Register & Send Verification</button>
-            
-            <button type="button" id="resend-verification" style="background-color: #34a853; display: none;">Resend Verification Email</button>
-        </form>
+<a class="btn" href="game.html2" download>Download Game (Full)</a>
 
-        <div id="message"></div>
-    </div>
+<a class="btn" href="game-lite.html2" download>Download Game (Lite)</a>
 
-    <script type="module">
-        // Your Firebase Configuration (Provided by you earlier)
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-lBtzoK98rO6TH6nQV4ugiPsVMbAJ-44",
-            authDomain: "timetravel-server.firebaseapp.com",
-            projectId: "timetravel-server",
-            // Include other settings as needed
-        };
+<a class="btn" href="https://github.com/Benno111/AppStore/releases" target="_blank">Download Android APK</a>
 
-        // Import Modular Functions
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        // --- DOM Elements ---
-        const signupForm = document.getElementById('signup-form');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const messageDiv = document.getElementById('message');
-        const resendButton = document.getElementById('resend-verification');
-
-        // Function to display messages
-        const showMessage = (text, isError = false) => {
-            messageDiv.textContent = text;
-            messageDiv.className = isError ? 'error' : 'success';
-        };
-
-        // --- 1. Handle Sign Up ---
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            
-            showMessage('Registering user...', false);
-
-            try {
-                // Firebase API call to create the user
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                
-                // Immediately send verification email
-                await handleSendVerification(userCredential.user);
-
-                showMessage(`Account created for ${email}! Verification email sent. Please check your inbox.`, false);
-                resendButton.style.display = 'block'; // Show resend button
-
-            } catch (error) {
-                // Display specific Firebase error messages
-                let errorMessage = 'An unknown error occurred.';
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'This email is already in use. Try logging in.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'Password should be at least 6 characters.';
-                } else {
-                    errorMessage = error.message;
-                }
-                showMessage(`Registration Failed: ${errorMessage}`, true);
-                resendButton.style.display = 'none';
-            }
-        });
-
-        // --- 2. Handle Sending Verification Email ---
-        const handleSendVerification = async (user) => {
-            if (user) {
-                // Firebase API call to send verification
-                await sendEmailVerification(user);
-            }
-        };
-
-        // --- 3. Handle Resend Button ---
-        resendButton.addEventListener('click', async () => {
-            const user = auth.currentUser;
-            if (user) {
-                showMessage('Sending verification email again...', false);
-                try {
-                    await handleSendVerification(user);
-                    showMessage('Verification email successfully re-sent!', false);
-                } catch (error) {
-                    showMessage(`Resend Failed: ${error.message}`, true);
-                }
-            } else {
-                showMessage('Please sign up first to resend verification.', true);
-            }
-        });
-
-    </script>
+<a class="btn" href="https://github.com/Benno111/AppStore/releases" target="_blank">Download Android Lite APK</a>
 
 </body>
 </html>
+
